@@ -1,3 +1,5 @@
+<img src="src/stremio_dl/assets/stremio-dl.png" width="96" align="right" alt="">
+
 # stremio-dl
 
 A terminal app that finds movies and TV shows through Stremio addons (Cinemeta for
@@ -15,9 +17,13 @@ Requires [uv](https://docs.astral.sh/uv/). From this folder:
 
 ```powershell
 uv sync                 # creates .venv with Python 3.13 and libtorrent
-uv run sdl              # run it from the project
-uv tool install .       # or install a global `sdl` command
+uv run sdl shortcut     # adds a stremio-dl icon to the desktop and the Start menu
 ```
+
+After that, double-click the **stremio-dl** icon to start. You can also run `uv run sdl`
+from this folder, or `uv tool install .` for a global `sdl` command. The shortcut points
+at the environment you ran `sdl shortcut` from, so run it again if you move the project or
+switch to the global install.
 
 The first run creates `%APPDATA%\stremio-dl\config.toml`. Windows Firewall may ask
 whether to allow incoming connections; allowing them gives you more peers, but downloads
@@ -25,11 +31,23 @@ work either way.
 
 ## Use
 
-Interactive (search → pick → overview → selection → plan → download):
+The icon (or `sdl` with no command) opens a home menu:
 
-```powershell
-sdl
 ```
+? What would you like to do?
+ » Download a movie or TV show
+   Resume paused downloads (1)
+   Download history
+   Open TV Shows folder
+   Open Movies folder
+   Settings
+   Quit
+```
+
+**Download a movie or TV show** walks you through search → pick → overview → selection →
+plan → download. When it finishes, or when you press Ctrl+C to pause, you're back at the
+menu; the window only closes when you pick **Quit**. **Settings** opens the config file in
+Notepad.
 
 One-shot:
 
@@ -48,6 +66,7 @@ Other commands:
 | `sdl info tt0108778` | Seasons, episode counts and sampled resolutions |
 | `sdl status` | Download jobs and their progress |
 | `sdl resume [JOB]` | Continue paused/interrupted jobs (Ctrl+C pauses) |
+| `sdl shortcut` | Create the desktop (and Start menu) icon |
 | `sdl config show` / `set KEY VALUE` / `reset` / `path` | Settings |
 
 ### Selection syntax
@@ -107,14 +126,15 @@ library path as `name.mkv.part` and renamed when complete. Episodes already in t
 ## Development
 
 ```powershell
-uv run pytest            # 84 tests; offline (recorded addon responses + a local seeder)
+uv run pytest                      # 90 tests, offline (recorded responses + a local seeder)
 uv run ruff check src tests
+uv run python tools/make_icon.py   # redraw the icon (standard library only)
 ```
 
 Layout: `addons/` (protocol client and cache), `catalog.py`, `metadata.py`, `selection.py`,
 `quality.py`, `streams.py`, `planner.py`, `library.py`, `engine/torrent.py` (libtorrent),
 `store.py` (SQLite at `%LOCALAPPDATA%\stremio-dl\state.db`), `runner.py`, `wizard.py`,
-`cli.py`, `ui.py`.
+`home.py` (the menu), `shortcut.py`, `cli.py`, `ui.py`.
 
 ## A word of caution
 

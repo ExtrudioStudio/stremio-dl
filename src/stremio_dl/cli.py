@@ -15,8 +15,10 @@ from . import __version__
 from .addons.client import AddonError
 from .catalog import search
 from .config import Config, config_path, data_dir, load_config, log_dir, save_config, set_value
+from .home import run_home
 from .quality import parse_quality
 from .selection import SelectionError, parse_selection, split_spec
+from .shortcut import create_shortcuts
 from .store import Store
 from .ui import console, plan_table, search_table, selection_line, status_table
 from .wizard import (
@@ -30,14 +32,13 @@ from .wizard import (
     pick_title,
     resume,
     show_overview,
-    wizard,
 )
 
 app = typer.Typer(
     add_completion=False,
     invoke_without_command=True,
     help="Download movies and TV shows through Stremio addons. Run without a command for the "
-    "interactive wizard.",
+    "home menu.",
 )
 config_app = typer.Typer(help="Show or change settings.", no_args_is_help=True)
 app.add_typer(config_app, name="config")
@@ -95,7 +96,7 @@ def main_callback(
         raise typer.Exit()
     _setup_logging(verbose)
     if ctx.invoked_subcommand is None:
-        _run(wizard(_cfg()))
+        run_home()
 
 
 @app.command("search")
@@ -209,6 +210,22 @@ def resume_cmd(
 ) -> None:
     """Continue paused or interrupted downloads."""
     _run(resume(_cfg(), job_id))
+
+
+@app.command("shortcut")
+def shortcut_cmd(
+    start_menu: Annotated[
+        bool, typer.Option("--start-menu/--no-start-menu", help="Also add a Start menu entry.")
+    ] = True,
+) -> None:
+    """Put a stremio-dl icon on the desktop (Windows) that opens the home menu."""
+    try:
+        paths = create_shortcuts(start_menu=start_menu)
+    except RuntimeError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(1) from None
+    for path in paths:
+        console.print(f"Created [bold]{path}[/]")
 
 
 @config_app.command("show")
